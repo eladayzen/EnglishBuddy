@@ -4,7 +4,7 @@ export interface Character {
   emoji: string;
   voice: "alloy" | "echo" | "fable" | "nova" | "onyx" | "shimmer";
   personality: string;
-  unlockAt: number; // conversations needed to unlock (0 = starter)
+  unlockAt: number; // messages sent needed to unlock (0 = starter)
   color: string; // tailwind gradient
 }
 
@@ -24,7 +24,7 @@ export const CHARACTERS: Character[] = [
     emoji: "🐕",
     voice: "fable",
     personality: "You are Max, a loyal and playful dog. You are very encouraging and love to celebrate every answer. You sometimes use dog expressions like 'woof!' and 'pawsome!'.",
-    unlockAt: 5,
+    unlockAt: 20,
     color: "from-amber-400 to-orange-500",
   },
   {
@@ -33,7 +33,7 @@ export const CHARACTERS: Character[] = [
     emoji: "🤖",
     voice: "echo",
     personality: "You are Zap, a funny little robot who is learning about humans. You find human things fascinating and sometimes say 'beep boop' or 'processing...' before giving fun answers.",
-    unlockAt: 12,
+    unlockAt: 50,
     color: "from-cyan-400 to-blue-500",
   },
   {
@@ -42,7 +42,7 @@ export const CHARACTERS: Character[] = [
     emoji: "🦉",
     voice: "shimmer",
     personality: "You are Luna, a wise and gentle owl. You love telling short fun facts and say things like 'did you know?' You are calm and patient.",
-    unlockAt: 20,
+    unlockAt: 100,
     color: "from-indigo-400 to-violet-500",
   },
   {
@@ -51,7 +51,7 @@ export const CHARACTERS: Character[] = [
     emoji: "🦖",
     voice: "onyx",
     personality: "You are Rex, a tiny friendly dinosaur. You think everything is AMAZING and use lots of excitement. You love to ROAR (in a friendly way) and say things like 'RAWR! That's so cool!'.",
-    unlockAt: 30,
+    unlockAt: 150,
     color: "from-green-400 to-emerald-500",
   },
 ];

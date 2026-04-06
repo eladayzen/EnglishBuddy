@@ -35,7 +35,7 @@ export default function Home() {
   const [difficulty, setDifficulty] = useState(1);
   const [transcript, setTranscript] = useState("");
   const [character, setCharacter] = useState<Character>(CHARACTERS[0]);
-  const [conversationCount, setConversationCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(0);
   const [justUnlocked, setJustUnlocked] = useState<Character | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -52,20 +52,32 @@ export default function Home() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load saved state
+  // Load saved state — auto-skip welcome for returning users
   useEffect(() => {
-    const saved = localStorage.getItem("englishbuddy_name");
-    if (saved) setName(saved);
+    const savedName = localStorage.getItem("englishbuddy_name");
     const savedSeq = localStorage.getItem("englishbuddy_sequence");
-    if (savedSeq) {
-      try { setSequence(JSON.parse(savedSeq)); } catch { /* ignore */ }
-    }
-    const savedCount = localStorage.getItem("englishbuddy_conversations");
-    if (savedCount) setConversationCount(parseInt(savedCount, 10) || 0);
+    const savedCount = localStorage.getItem("englishbuddy_messages");
     const savedChar = localStorage.getItem("englishbuddy_character");
+
+    if (savedName) setName(savedName);
+    if (savedCount) setMessageCount(parseInt(savedCount, 10) || 0);
+
+    let seq: QuestionSequence | null = null;
+    if (savedSeq) {
+      try { seq = JSON.parse(savedSeq); setSequence(seq); } catch { /* ignore */ }
+    }
+
+    let char = CHARACTERS[0];
     if (savedChar) {
       const found = CHARACTERS.find(c => c.id === savedChar);
-      if (found) setCharacter(found);
+      if (found) { char = found; setCharacter(found); }
+    }
+
+    // Returning user — skip welcome, go to character select
+    if (savedName && seq) {
+      setQuestionIndex(0);
+      setCurrentQuestion(seq.questions[0]);
+      setState("characters");
     }
   }, []);
 
@@ -115,7 +127,119 @@ export default function Home() {
     }
   }, []);
 
-  // Send message to AI
+  // Audio queue — plays in strict order with pauses between
+  const audioQueueRef = useRef<{ url: string; index: number }[]>([]);
+  const nextPlayIndexRef = useRef(1);
+  const isPlayingRef = useRef(false);
+  const PAUSE_BETWEEN_SENTENCES_MS = 600;
+
+  // Pre-cached common openers
+  const cachedAudioRef = useRef<Record<string, string>>({});
+  const COMMON_OPENERS = [
+    "Perfect!", "Amazing!", "Great job!", "Awesome!", "Nice!",
+    "Cool!", "That's great!", "Good one!", "Wonderful!", "Super!",
+    "Very good!", "Well done!", "Excellent!", "Fantastic!", "Yes!",
+    "Oh wow!", "I love that!", "Good choice!", "That's fun!", "Yay!",
+  ];
+
+  // Pre-generate cached audio for common openers on character change
+  useEffect(() => {
+    const cache = cachedAudioRef.current;
+    // Only pre-cache for current character voice
+    const voiceKey = character.voice;
+    let cancelled = false;
+
+    async function preCache() {
+      for (const phrase of COMMON_OPENERS) {
+        if (cancelled) break;
+        const key = `${voiceKey}:${phrase}`;
+        if (cache[key]) continue;
+        try {
+          const res = await fetch("/api/speak", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: phrase, voice: voiceKey }),
+          });
+          if (res.ok && !cancelled) {
+            const blob = await res.blob();
+            cache[key] = URL.createObjectURL(blob);
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    preCache();
+    return () => { cancelled = true; };
+  }, [character.voice]);
+
+  const playNextInQueue = useCallback(async () => {
+    if (isPlayingRef.current) return;
+
+    // Find the next item in order
+    const next = audioQueueRef.current.find(item => item.index === nextPlayIndexRef.current);
+    if (!next) return;
+
+    // Remove it from queue
+    audioQueueRef.current = audioQueueRef.current.filter(item => item !== next);
+    isPlayingRef.current = true;
+    setIsSpeaking(true);
+
+    try {
+      const audio = new Audio(next.url);
+      audioRef.current = audio;
+      await new Promise<void>((resolve) => {
+        audio.onended = () => { URL.revokeObjectURL(next.url); resolve(); };
+        audio.onerror = () => { URL.revokeObjectURL(next.url); resolve(); };
+        audio.play().catch(() => resolve());
+      });
+
+      // Pause between sentences
+      if (audioQueueRef.current.length > 0) {
+        await new Promise(r => setTimeout(r, PAUSE_BETWEEN_SENTENCES_MS));
+      }
+    } catch { /* ignore */ }
+
+    nextPlayIndexRef.current++;
+    isPlayingRef.current = false;
+    setIsSpeaking(audioQueueRef.current.length > 0);
+    playNextInQueue();
+  }, []);
+
+  const speakSentence = useCallback(async (text: string, index: number) => {
+    const cacheKey = `${character.voice}:${text.trim()}`;
+    const cached = cachedAudioRef.current[cacheKey];
+
+    if (cached) {
+      // Use pre-cached audio — instant!
+      audioQueueRef.current.push({ url: cached, index });
+      // Remove from cache so it gets re-fetched for next time
+      delete cachedAudioRef.current[cacheKey];
+      playNextInQueue();
+      // Re-cache it in background
+      fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.trim(), voice: character.voice }),
+      }).then(r => r.ok ? r.blob() : null).then(blob => {
+        if (blob) cachedAudioRef.current[cacheKey] = URL.createObjectURL(blob);
+      }).catch(() => {});
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice: character.voice }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      audioQueueRef.current.push({ url, index });
+      playNextInQueue();
+    } catch { /* ignore */ }
+  }, [character.voice, playNextInQueue]);
+
+  // Send message to AI — streaming with per-sentence TTS
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
 
@@ -124,8 +248,25 @@ export default function Home() {
     setMessages(newMessages);
     setIsLoading(true);
 
+    // Increment message count for progress
+    const newCount = messageCount + 1;
+    setMessageCount(newCount);
+    localStorage.setItem("englishbuddy_messages", String(newCount));
+
+    // Check for character unlock
+    const newlyUnlocked = CHARACTERS.find(c => c.unlockAt === newCount);
+    if (newlyUnlocked) {
+      setJustUnlocked(newlyUnlocked);
+      setTimeout(() => setState("unlock"), 2000);
+    }
+
+    // Clear audio queue and reset play counter
+    audioQueueRef.current = [];
+    nextPlayIndexRef.current = 1;
+    isPlayingRef.current = false;
+
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/chat-stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -136,17 +277,65 @@ export default function Home() {
           characterPersonality: character.personality,
         }),
       });
-      const data = await res.json();
-      if (data.message) {
-        setMessages([...newMessages, { role: "assistant", content: data.message }]);
-        speak(data.message);
+
+      if (!res.ok || !res.body) {
+        // Fallback to non-streaming
+        const fallback = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: newMessages,
+            topic: currentQuestion?.text,
+            selectedOption,
+            difficulty,
+            characterPersonality: character.personality,
+          }),
+        });
+        const data = await fallback.json();
+        if (data.message) {
+          setMessages([...newMessages, { role: "assistant", content: data.message }]);
+          speak(data.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === "sentence") {
+              fullText += (fullText ? " " : "") + data.text;
+              // Update message in real time
+              setMessages([...newMessages, { role: "assistant", content: fullText }]);
+              // Fire TTS for this sentence immediately (with correct order index)
+              speakSentence(data.text, data.index);
+            }
+          } catch { /* ignore parse errors */ }
+        }
+      }
+
+      // Final update
+      if (fullText) {
+        setMessages([...newMessages, { role: "assistant", content: fullText }]);
       }
     } catch (error) {
       console.error("Failed to send message:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, currentQuestion, selectedOption, difficulty, speak]);
+  }, [isLoading, currentQuestion, selectedOption, difficulty, character.personality, speak, speakSentence]);
 
   // Speech-to-text — tap to start, tap to stop (manual control)
   const startListening = useCallback(() => {
@@ -224,35 +413,13 @@ export default function Home() {
     goToNextQuestion();
   };
 
-  // Pick a card
-  const handlePickOption = async (option: string) => {
+  // Pick a card — uses sendMessage which now streams
+  const handlePickOption = (option: string) => {
     setSelectedOption(option);
     setMessages([]);
     setState("chat");
-
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: `I chose: ${option}` }],
-          topic: currentQuestion?.text,
-          selectedOption: option,
-          difficulty,
-          characterPersonality: character.personality,
-        }),
-      });
-      const data = await res.json();
-      if (data.message) {
-        setMessages([{ role: "assistant", content: data.message }]);
-        speak(data.message);
-      }
-    } catch (error) {
-      console.error("Failed to start conversation:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    // Small delay to let state update, then send
+    setTimeout(() => sendMessage(`I chose: ${option}`), 100);
   };
 
   const handleSkip = () => goToNextQuestion();
@@ -261,20 +428,6 @@ export default function Home() {
   const handleFeedback = (rating: string) => {
     if (rating === "too_easy") setDifficulty(Math.min(3, difficulty + 1));
     else if (rating === "too_hard") setDifficulty(Math.max(1, difficulty - 1));
-
-    // Increment conversation count
-    const newCount = conversationCount + 1;
-    setConversationCount(newCount);
-    localStorage.setItem("englishbuddy_conversations", String(newCount));
-
-    // Check if we just unlocked a new character
-    const newlyUnlocked = CHARACTERS.find(c => c.unlockAt === newCount);
-    if (newlyUnlocked) {
-      setJustUnlocked(newlyUnlocked);
-      setState("unlock");
-      return;
-    }
-
     goToNextQuestion();
   };
 
@@ -323,9 +476,9 @@ export default function Home() {
 
   // --- CHARACTER SELECT ---
   if (state === "characters") {
-    const unlocked = getUnlockedCharacters(conversationCount);
-    const progress = getProgressToNext(conversationCount);
-    const nextChar = getNextUnlock(conversationCount);
+    const unlocked = getUnlockedCharacters(messageCount);
+    const progress = getProgressToNext(messageCount);
+    const nextChar = getNextUnlock(messageCount);
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 flex flex-col items-center justify-center p-6">
@@ -335,7 +488,7 @@ export default function Home() {
         {nextChar && (
           <div className="w-full max-w-sm mb-6">
             <div className="flex items-center justify-between text-white/70 text-xs mb-1">
-              <span>{conversationCount} conversations</span>
+              <span>{messageCount} conversations</span>
               <span className="flex items-center gap-1">
                 <span>{nextChar.emoji}</span> unlocks at {nextChar.unlockAt}
               </span>
@@ -459,20 +612,40 @@ export default function Home() {
   // --- CHAT ---
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      <div className={`bg-gradient-to-r ${character.color} p-4 flex items-center justify-between`}>
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{character.emoji}</span>
-          <div>
-            <h1 className="text-white font-bold text-lg">{character.name}</h1>
-            <p className="text-white/70 text-xs">Talking about: {selectedOption}</p>
+      <div className={`bg-gradient-to-r ${character.color} p-3 pb-2`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{character.emoji}</span>
+            <div>
+              <h1 className="text-white font-bold text-lg">{character.name}</h1>
+              <p className="text-white/70 text-xs">Talking about: {selectedOption}</p>
+            </div>
           </div>
+          <button
+            onClick={handleNewQuestion}
+            className="bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/30 transition-colors"
+          >
+            New Question ✨
+          </button>
         </div>
-        <button
-          onClick={handleNewQuestion}
-          className="bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/30 transition-colors"
-        >
-          New Question ✨
-        </button>
+        {/* Progress bar */}
+        {(() => {
+          const progress = getProgressToNext(messageCount);
+          const nextChar = getNextUnlock(messageCount);
+          if (!nextChar) return null;
+          return (
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{character.emoji}</span>
+              <div className="flex-1 bg-white/20 rounded-full h-2.5">
+                <div
+                  className="bg-yellow-400 h-2.5 rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${progress.percent}%` }}
+                />
+              </div>
+              <span className="text-lg">{nextChar.emoji}</span>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">

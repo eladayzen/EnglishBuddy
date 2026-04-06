@@ -20,16 +20,20 @@ export async function POST(req: NextRequest) {
       model: "tts-1",
       voice: selectedVoice as "alloy" | "echo" | "fable" | "nova" | "onyx" | "shimmer",
       input: text,
-      speed: 0.9,
+      speed: 0.8,
+      response_format: "mp3",
     });
 
-    // Return audio as binary
-    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    // Stream the audio back for faster playback start
+    const stream = response.body;
+    if (!stream) {
+      return NextResponse.json({ error: "No audio stream" }, { status: 500 });
+    }
 
-    return new NextResponse(audioBuffer, {
+    return new NextResponse(stream as ReadableStream, {
       headers: {
         "Content-Type": "audio/mpeg",
-        "Content-Length": audioBuffer.length.toString(),
+        "Transfer-Encoding": "chunked",
       },
     });
   } catch (error) {
