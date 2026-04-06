@@ -95,12 +95,38 @@ Each question has:
 
 ### Example Conversation
 ```
-AI: "You like pizza! Me too! 🍕 What is your favorite pizza?"
-Kid: "i like pizza cheez"
-AI: "Cheese pizza! Yummy! 🧀 We say 'cheese pizza'. Do you like it with tomato sauce?"
-Kid: "yes"
-AI: "Great! Pizza with cheese and tomato sauce is called 'Margherita'. Can you say 'Margherita pizza'?"
+AI (spoken aloud): "You like pizza! Me too! 🍕 What is your favorite pizza?"
+Kid (speaks into mic): "i like pizza cheez"
+AI (spoken aloud): "Cheese pizza! Yummy! 🧀 We say 'cheese pizza'. Do you like it with tomato sauce?"
+Kid (taps button): "Yes!"
+AI (spoken aloud): "Great! Pizza with cheese and tomato sauce is called 'Margherita'. Can you say 'Margherita pizza'?"
 ```
+
+---
+
+## Voice Interaction
+
+### How It Works
+- **Speech-to-Text:** Browser's built-in Web Speech API (`SpeechRecognition`). Kid speaks, browser transcribes. No external service, no cost.
+- **Text-to-Speech:** Browser's built-in Web Speech API (`SpeechSynthesis`). AI responses are spoken aloud automatically.
+- **Subtitles:** All conversation text shown on screen as chat bubbles (so kid can read along)
+- **Fallback buttons:** Pre-made response buttons always visible for common phrases: "Yes!", "No", "I don't know", "Tell me more", "Say it again". Kid is never stuck if mic doesn't catch something.
+
+### Input Modes
+The kid can respond in THREE ways (whichever feels natural):
+1. **Speak** — tap mic button (or always-listening), browser transcribes
+2. **Tap a quick response button** — "Yes!", "No", "I like it!", "I don't know"
+3. **Type** — keyboard input for older/more confident kids (optional, small input field)
+
+### Platform Support
+- Chrome (desktop + Android): Full support
+- Safari (iOS): SpeechRecognition has limited support — fallback to buttons + typing
+- Firefox: SpeechRecognition not supported — fallback to buttons + typing
+
+### Voice Settings
+- Speech rate: slower than normal (0.8x) for kids learning
+- Voice: pick a clear, friendly English voice from available system voices
+- Language: en-US for recognition
 
 ---
 
@@ -216,7 +242,7 @@ A Node.js script that creates realistic fake data:
 ## What We DON'T Build (out of scope)
 
 - User authentication (just a name in localStorage)
-- Real speech/audio (text only for MVP)
+- ~~Real speech/audio~~ → INCLUDED (Web Speech API, browser-native)
 - Progress tracking UI for the kid
 - Parent account / login
 - Mobile app (web only)
