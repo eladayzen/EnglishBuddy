@@ -1,0 +1,225 @@
+# English Buddy — Product Requirements Document
+## MVP for Sisense Demo — April 2026
+
+---
+
+## Overview
+
+English Buddy is an AI-powered English conversation app for kids (ages 8-12) who are learning English as a second language. Each session starts with a visual question (3 image cards), the kid picks one, and a short AI conversation follows about that topic.
+
+The app is the VEHICLE for the Sisense demo. The real deliverable is showing how Sisense provides analytics for a vibe-coded product.
+
+---
+
+## Core User Flow
+
+```
+Kid opens app
+  → Enters name (no auth, just a name — persisted in localStorage)
+  → Sees: Question + 3 image/illustration cards
+  → Example: "What's your favorite food?" → [Pizza] [Ice Cream] [Hamburger]
+  → Option to [Skip] if they don't like the question
+  
+Kid picks a card
+  → Chat window opens with AI greeting related to the topic
+  → AI speaks in simple English (A1-A2 level)
+  → AI asks follow-up questions, teaches vocabulary
+  → Kid types or selects from suggested responses
+  
+After a few exchanges (3-5 messages)
+  → "Ask me something else!" button appears
+  → New question + 3 cards
+  → Repeat
+  
+Session ends
+  → Kid closes tab (no explicit end)
+  → Or after X questions answered
+```
+
+---
+
+## Question System
+
+### Question Config (server-side)
+Each question has:
+- `id`: unique identifier
+- `text`: the question in English ("What's your favorite food?")
+- `options`: array of 3 choices, each with:
+  - `label`: text ("Pizza")
+  - `image`: URL or emoji/illustration reference
+- `topic_tag`: for analytics ("food", "animals", "sports", "family")
+- `difficulty`: 1-3 (vocabulary level)
+- `sequence_group`: for A/B testing ("sequence_A", "sequence_B")
+
+### A/B Testing
+- Two (or more) question sequences configured on server
+- New users randomly assigned to a sequence
+- Same user always gets the same sequence
+- Sisense shows: which sequence retains better
+
+### Example Questions (MVP — 6 total, 2 sequences of 3)
+
+**Sequence A:**
+1. "What's your favorite animal?" → [Dog] [Cat] [Fish]
+2. "What do you like to eat?" → [Pizza] [Ice Cream] [Pasta]
+3. "What do you do after school?" → [Play] [Read] [Watch TV]
+
+**Sequence B:**
+1. "What do you like to eat?" → [Pizza] [Ice Cream] [Pasta]
+2. "What's your favorite game?" → [Soccer] [Video Games] [Hide and Seek]
+3. "Who is your best friend?" → [A boy] [A girl] [My pet]
+
+---
+
+## AI Tutor Behavior
+
+### System Prompt Principles
+- Speak in very simple English (A1-A2 CEFR level)
+- Short sentences (5-8 words max)
+- Use the topic the kid selected
+- Ask one question at a time
+- When the kid makes a grammar mistake, gently correct: "Great! We say 'I like pizza' — you're doing awesome!"
+- Introduce 1-2 new vocabulary words per conversation
+- Be encouraging and fun
+- Use emojis sparingly
+
+### Example Conversation
+```
+AI: "You like pizza! Me too! 🍕 What is your favorite pizza?"
+Kid: "i like pizza cheez"
+AI: "Cheese pizza! Yummy! 🧀 We say 'cheese pizza'. Do you like it with tomato sauce?"
+Kid: "yes"
+AI: "Great! Pizza with cheese and tomato sauce is called 'Margherita'. Can you say 'Margherita pizza'?"
+```
+
+---
+
+## Data Model (for Sisense analytics)
+
+### Tables
+
+**users**
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL | Auto-increment |
+| name | VARCHAR | Kid's display name |
+| sequence_group | VARCHAR | A/B test group ("sequence_A" or "sequence_B") |
+| created_at | TIMESTAMP | First visit |
+| last_seen_at | TIMESTAMP | Last activity |
+
+**sessions**
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL | Auto-increment |
+| user_id | INT | FK to users |
+| started_at | TIMESTAMP | Session start |
+| ended_at | TIMESTAMP | Session end (or last activity + 5 min timeout) |
+| questions_answered | INT | Count of topics picked |
+| messages_sent | INT | Total messages in session |
+| duration_seconds | INT | Session duration |
+
+**conversations**
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL | Auto-increment |
+| session_id | INT | FK to sessions |
+| user_id | INT | FK to users |
+| question_id | VARCHAR | Which question was shown |
+| selected_option | VARCHAR | Which card they picked |
+| skipped | BOOLEAN | Did they skip this question |
+| message_count | INT | Messages in this conversation |
+| new_words_introduced | TEXT[] | Vocabulary taught |
+| started_at | TIMESTAMP | When this conversation started |
+
+**messages**
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL | Auto-increment |
+| conversation_id | INT | FK to conversations |
+| role | VARCHAR | "user" or "assistant" |
+| content | TEXT | Message text |
+| created_at | TIMESTAMP | When sent |
+
+---
+
+## Sisense Dashboard (The Deliverable)
+
+### Charts to Build
+
+1. **Retention Curve** — Day 1/3/7/14/30 retention by cohort
+   - X: days since signup, Y: % of users returning
+   - Split by sequence_group (A vs B)
+
+2. **Session Funnel**
+   - Opened app → Started conversation → 3+ messages → Completed 2+ topics → Returned next day
+   - Shows where kids drop off
+
+3. **A/B Test Results**
+   - Sequence A vs B: retention at day 3 and day 7
+   - Sequence A vs B: avg messages per session
+   - Sequence A vs B: avg topics per session
+
+4. **Topic Engagement**
+   - Bar chart: messages per topic (which topics generate most conversation)
+   - Skip rate per question (which questions kids skip)
+
+5. **Vocabulary Growth**
+   - Words introduced over time (cumulative)
+   - Most common words taught
+
+---
+
+## Synthetic Data Generator
+
+A Node.js script that creates realistic fake data:
+- 200 users over 30 days
+- Split 50/50 into sequence_A and sequence_B
+- Realistic retention: ~60% day 1, ~30% day 3, ~15% day 7, ~5% day 14
+- Sequence B retains slightly better (to show A/B result)
+- 2-5 sessions per retained user
+- 1-4 topics per session
+- 3-8 messages per conversation
+- Some questions get skipped more than others
+
+---
+
+## Tech Stack
+
+| Component | Tech | Hosting |
+|-----------|------|---------|
+| Frontend | Next.js + Tailwind CSS | Netlify |
+| Backend/API | Node.js + Express + TypeScript | Railway |
+| AI | Claude API (Anthropic SDK) | API calls |
+| Database | PostgreSQL | Railway |
+| Analytics | Sisense Compose SDK + MCP Server | Sisense Cloud (trial) |
+| Design | Tailwind (or Google Stitch if viable) | — |
+
+---
+
+## What We DON'T Build (out of scope)
+
+- User authentication (just a name in localStorage)
+- Real speech/audio (text only for MVP)
+- Progress tracking UI for the kid
+- Parent account / login
+- Mobile app (web only)
+- Real A/B testing framework (just two hardcoded sequences)
+- Production error handling
+- Real vocabulary tracking (synthetic data covers this)
+
+---
+
+## Build Order
+
+1. **Set up project** — Next.js app, Express server, Railway PostgreSQL
+2. **Database schema** — Create tables above
+3. **Question config** — JSON file with 6 questions, 2 sequences
+4. **Chat UI** — Question cards + chat window (Tailwind)
+5. **AI integration** — Claude API with tutor system prompt
+6. **Logging** — Every message, session, conversation saved to DB
+7. **Synthetic data** — Generator script, run once to populate
+8. **Sisense connection** — Connect to PostgreSQL, build data model
+9. **Sisense dashboard** — 5 charts from the list above
+10. **Embed (optional)** — Compose SDK charts in an admin page
+11. **Strategy doc** — Already written
+12. **Record video** — 3 min Loom walkthrough
