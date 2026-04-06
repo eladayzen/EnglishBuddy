@@ -26,11 +26,21 @@ Kid picks a card
   → AI asks follow-up questions, teaches vocabulary
   → Kid types or selects from suggested responses
   
-After a few exchanges (3-5 messages)
-  → "Ask me something else!" button appears
-  → New question + 3 cards
-  → Repeat
+Kid can keep chatting as long as they want
+  → "New Question!" button is always visible but optional
+  → Kid can keep talking about current topic if they're enjoying it
   
+When kid clicks "New Question!"
+  → Difficulty feedback screen appears first:
+    "How was that?"
+    😊 "Too easy!" → next conversation uses harder vocabulary
+    👍 "Just right!" → keeps same difficulty  
+    😅 "Too hard!" → next conversation uses simpler words
+  → Three big emoji buttons, kid taps one
+  → Instantly shows next question + 3 cards
+  → AI adapts difficulty based on feedback
+  → Repeat
+
 Session ends
   → Kid closes tab (no explicit end)
   → Or after X questions answered
@@ -128,6 +138,8 @@ AI: "Great! Pizza with cheese and tomato sauce is called 'Margherita'. Can you s
 | selected_option | VARCHAR | Which card they picked |
 | skipped | BOOLEAN | Did they skip this question |
 | message_count | INT | Messages in this conversation |
+| difficulty_rating | VARCHAR | "too_easy", "just_right", "too_hard", or NULL if not rated |
+| difficulty_level | INT | 1-3, the difficulty used for this conversation |
 | new_words_introduced | TEXT[] | Vocabulary taught |
 | started_at | TIMESTAMP | When this conversation started |
 
@@ -166,6 +178,11 @@ AI: "Great! Pizza with cheese and tomato sauce is called 'Margherita'. Can you s
 5. **Vocabulary Growth**
    - Words introduced over time (cumulative)
    - Most common words taught
+
+6. **Difficulty Adaptation**
+   - Pie chart: % too_easy / just_right / too_hard ratings over time
+   - Trend: are ratings shifting toward "just right" as AI adapts?
+   - Correlation: kids who rate "too hard" churn faster (retention by rating)
 
 ---
 
