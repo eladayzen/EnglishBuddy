@@ -28,16 +28,20 @@ You will be told the current difficulty level and the topic. Stay on topic and a
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, topic, selectedOption, difficulty } = await req.json();
+    const { messages, topic, selectedOption, difficulty, characterPersonality } = await req.json();
 
     const topicContext = topic
       ? `\n\nCurrent topic: "${topic}". The kid selected: "${selectedOption}". Difficulty level: ${difficulty}/3. Start by acknowledging their choice and have a fun conversation about it.`
       : "";
 
+    const characterContext = characterPersonality
+      ? `\n\nCHARACTER: ${characterPersonality}`
+      : "";
+
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 150,
-      system: SYSTEM_PROMPT + topicContext,
+      system: SYSTEM_PROMPT + characterContext + topicContext,
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
