@@ -257,7 +257,16 @@ export default function Home() {
     const newlyUnlocked = CHARACTERS.find(c => c.unlockAt === newCount);
     if (newlyUnlocked) {
       setJustUnlocked(newlyUnlocked);
-      setTimeout(() => setState("unlock"), 2000);
+      setTimeout(() => {
+        // Pause any playing audio before showing unlock
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+        audioQueueRef.current = [];
+        isPlayingRef.current = false;
+        setIsSpeaking(false);
+        setState("unlock");
+      }, 2000);
     }
 
     // Clear audio queue and reset play counter
@@ -445,12 +454,17 @@ export default function Home() {
   // --- WELCOME ---
   if (state === "welcome") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 flex flex-col items-center justify-center p-6">
-        <div className="text-6xl mb-4">🎓</div>
-        <h1 className="text-4xl font-bold text-white mb-2">English Buddy</h1>
-        <p className="text-white/80 text-lg mb-8">Learn English with a friend!</p>
-        <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-          <label className="text-gray-600 text-sm font-medium mb-2 block">
+      <div className="min-h-screen bg-[#fdf6ee] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Decorative background shapes */}
+        <div className="absolute top-10 left-10 w-24 h-24 bg-amber-200/40 rounded-full blur-2xl" />
+        <div className="absolute bottom-20 right-10 w-32 h-32 bg-purple-200/40 rounded-full blur-2xl" />
+        <div className="absolute top-1/4 right-20 w-16 h-16 bg-pink-200/40 rounded-full blur-xl" />
+
+        <div className="text-7xl mb-3 animate-float">🎓</div>
+        <h1 className="text-5xl font-extrabold text-amber-800 mb-1 tracking-tight">English Buddy</h1>
+        <p className="text-amber-600/70 text-lg mb-10 font-medium">Learn English with a friend!</p>
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 w-full max-w-sm shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-amber-100">
+          <label className="text-amber-700 text-sm font-semibold mb-2 block">
             What&apos;s your name?
           </label>
           <input
@@ -459,13 +473,13 @@ export default function Home() {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleStart()}
             placeholder="Type your name..."
-            className="w-full p-3 rounded-xl border-2 border-blue-200 text-lg focus:border-blue-400 focus:outline-none text-gray-800 mb-4"
+            className="w-full p-4 rounded-2xl border-2 border-amber-200 text-lg focus:border-amber-400 focus:outline-none text-amber-900 mb-5 bg-amber-50/50 placeholder:text-amber-300 transition-colors"
             autoFocus
           />
           <button
             onClick={handleStart}
             disabled={!name.trim()}
-            className="w-full bg-blue-500 text-white text-xl font-bold py-3 rounded-xl hover:bg-blue-600 disabled:opacity-40 transition-all"
+            className="w-full bg-amber-500 text-white text-xl font-bold py-4 rounded-2xl hover:bg-amber-600 disabled:opacity-30 transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0"
           >
             Let&apos;s Go! 🚀
           </button>
@@ -481,21 +495,25 @@ export default function Home() {
     const nextChar = getNextUnlock(messageCount);
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 flex flex-col items-center justify-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Choose your buddy!</h2>
+      <div className="min-h-screen bg-[#fdf6ee] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-16 right-8 w-20 h-20 bg-purple-200/30 rounded-full blur-2xl" />
+        <div className="absolute bottom-16 left-8 w-28 h-28 bg-amber-200/30 rounded-full blur-2xl" />
+
+        <h2 className="text-3xl font-extrabold text-amber-800 mb-1">Choose your buddy!</h2>
+        <p className="text-amber-600/60 text-sm mb-5 font-medium">Pick a friend to chat with</p>
 
         {/* Progress bar */}
         {nextChar && (
-          <div className="w-full max-w-sm mb-6">
-            <div className="flex items-center justify-between text-white/70 text-xs mb-1">
+          <div className="w-full max-w-sm mb-6 bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-amber-100">
+            <div className="flex items-center justify-between text-amber-700/60 text-xs mb-1.5 font-medium">
               <span>{messageCount} conversations</span>
               <span className="flex items-center gap-1">
                 <span>{nextChar.emoji}</span> unlocks at {nextChar.unlockAt}
               </span>
             </div>
-            <div className="w-full bg-white/20 rounded-full h-3">
+            <div className="w-full bg-amber-100 rounded-full h-3">
               <div
-                className="bg-yellow-400 h-3 rounded-full transition-all duration-500"
+                className="bg-amber-400 h-3 rounded-full transition-all duration-500 shadow-sm"
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
@@ -503,7 +521,7 @@ export default function Home() {
         )}
 
         <div className="flex flex-col gap-3 w-full max-w-sm">
-          {CHARACTERS.map((char) => {
+          {CHARACTERS.map((char, i) => {
             const isUnlocked = unlocked.includes(char);
             const isSelected = character.id === char.id;
             return (
@@ -511,25 +529,29 @@ export default function Home() {
                 key={char.id}
                 onClick={() => isUnlocked && handleSelectCharacter(char)}
                 disabled={!isUnlocked}
-                className={`rounded-2xl p-4 flex items-center gap-4 shadow-lg transition-all ${
+                className={`animate-pop-in rounded-3xl p-5 flex items-center gap-4 transition-all border ${
                   isUnlocked
                     ? isSelected
-                      ? "bg-white scale-105 ring-4 ring-yellow-400"
-                      : "bg-white hover:scale-105 active:scale-95"
-                    : "bg-white/30 opacity-50"
+                      ? "bg-amber-50 scale-[1.03] ring-3 ring-amber-400 border-amber-200 shadow-lg shadow-amber-200/40"
+                      : "bg-white hover:scale-[1.03] active:scale-[0.98] border-amber-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-lg"
+                    : "bg-white/40 border-gray-200/50 opacity-50"
                 }`}
+                style={{ animationDelay: `${i * 80}ms` }}
               >
-                <span className="text-4xl">{char.emoji}</span>
+                <span className="text-5xl">{char.emoji}</span>
                 <div className="text-left flex-1">
-                  <span className="text-lg font-semibold text-gray-800 block">
+                  <span className="text-lg font-bold text-amber-900 block">
                     {char.name}
                   </span>
                   {!isUnlocked && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-amber-600/50 font-medium">
                       🔒 {char.unlockAt} conversations to unlock
                     </span>
                   )}
                 </div>
+                {isUnlocked && isSelected && (
+                  <span className="text-amber-500 text-xl">✓</span>
+                )}
               </button>
             );
           })}
@@ -541,44 +563,71 @@ export default function Home() {
   // --- UNLOCK SCREEN ---
   if (state === "unlock" && justUnlocked) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-yellow-400 to-orange-500 flex flex-col items-center justify-center p-6">
-        <div className="text-7xl mb-4 animate-bounce">{justUnlocked.emoji}</div>
-        <h2 className="text-3xl font-bold text-white mb-2">New Buddy!</h2>
-        <p className="text-white/90 text-xl mb-8">
-          You unlocked <strong>{justUnlocked.name}</strong>!
-        </p>
-        <button
-          onClick={handleUnlockContinue}
-          className="bg-white text-orange-600 text-xl font-bold px-8 py-4 rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95"
-        >
-          Talk to {justUnlocked.name}! 🎉
-        </button>
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-[#fdf6ee] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Confetti-style floating decorations */}
+        <div className="absolute top-[5%] left-[10%] text-4xl animate-float" style={{ animationDelay: '0s' }}>🎉</div>
+        <div className="absolute top-[8%] right-[12%] text-3xl animate-float" style={{ animationDelay: '0.3s' }}>⭐</div>
+        <div className="absolute top-[15%] left-[50%] text-3xl animate-float" style={{ animationDelay: '0.6s' }}>🥳</div>
+        <div className="absolute bottom-[15%] left-[15%] text-3xl animate-float" style={{ animationDelay: '0.9s' }}>🎊</div>
+        <div className="absolute bottom-[20%] right-[10%] text-4xl animate-float" style={{ animationDelay: '1.2s' }}>✨</div>
+        <div className="absolute top-[40%] left-[5%] text-2xl animate-float" style={{ animationDelay: '1.5s' }}>🌟</div>
+        <div className="absolute top-[35%] right-[5%] text-2xl animate-float" style={{ animationDelay: '1.8s' }}>🎈</div>
+        <div className="absolute bottom-[30%] left-[40%] text-2xl animate-float" style={{ animationDelay: '2.1s' }}>💫</div>
+
+        {/* Warm glow blurs */}
+        <div className="absolute top-1/4 left-1/4 w-40 h-40 bg-amber-300/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-purple-300/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-200/20 rounded-full blur-3xl" />
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-[2rem] p-12 shadow-[0_12px_50px_rgba(0,0,0,0.1)] border border-amber-200 flex flex-col items-center animate-pop-in">
+          <div className="text-[6rem] mb-4 animate-bounce drop-shadow-lg">{justUnlocked.emoji}</div>
+          <div className="text-3xl mb-3 animate-wiggle">🎉🎉🎉</div>
+          <h2 className="text-4xl font-extrabold text-amber-800 mb-2">New Buddy!</h2>
+          <p className="text-amber-600/80 text-xl mb-10 font-medium">
+            You unlocked <strong className="text-amber-800">{justUnlocked.name}</strong>!
+          </p>
+          <button
+            onClick={handleUnlockContinue}
+            className="bg-amber-500 text-white text-xl font-bold px-12 py-5 rounded-2xl shadow-lg shadow-amber-500/30 hover:bg-amber-600 hover:-translate-y-1 hover:shadow-amber-500/40 transition-all active:translate-y-0 animate-pulse"
+          >
+            Talk to {justUnlocked.name}! 🎉
+          </button>
+        </div>
       </div>
     );
   }
 
   // --- QUESTION CARDS ---
   if (state === "question" && currentQuestion) {
+    const cardColors = [
+      "bg-purple-50 border-purple-200 hover:bg-purple-100/80",
+      "bg-amber-50 border-amber-200 hover:bg-amber-100/80",
+      "bg-emerald-50 border-emerald-200 hover:bg-emerald-100/80",
+    ];
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-[#fdf6ee] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-12 left-8 w-24 h-24 bg-purple-200/30 rounded-full blur-2xl" />
+        <div className="absolute bottom-20 right-10 w-28 h-28 bg-amber-200/30 rounded-full blur-2xl" />
+
         <div className="text-center mb-8">
-          <p className="text-white/70 text-sm mb-2">Hi {name}! 👋</p>
-          <h2 className="text-2xl font-bold text-white">{currentQuestion.text}</h2>
+          <p className="text-amber-600/60 text-sm mb-2 font-medium">Hi {name}! 👋</p>
+          <h2 className="text-3xl font-extrabold text-amber-800">{currentQuestion.text}</h2>
         </div>
         <div className="flex flex-col gap-4 w-full max-w-sm">
-          {currentQuestion.options.map((opt) => (
+          {currentQuestion.options.map((opt, i) => (
             <button
               key={opt.label}
               onClick={() => handlePickOption(opt.label)}
-              className="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-lg hover:scale-105 transition-transform active:scale-95"
+              className={`animate-pop-in rounded-3xl p-6 flex items-center gap-5 border shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:scale-[1.03] hover:shadow-lg transition-all active:scale-[0.98] ${cardColors[i % cardColors.length]}`}
+              style={{ animationDelay: `${i * 100}ms` }}
             >
-              <span className="text-4xl">{opt.emoji}</span>
-              <span className="text-xl font-semibold text-gray-800">{opt.label}</span>
+              <span className="text-5xl">{opt.emoji}</span>
+              <span className="text-xl font-bold text-amber-900">{opt.label}</span>
             </button>
           ))}
         </div>
-        <button onClick={handleSkip} className="mt-6 text-white/60 hover:text-white transition-colors">
-          Skip →
+        <button onClick={handleSkip} className="mt-8 text-amber-600/40 hover:text-amber-600 transition-colors font-medium text-sm">
+          Skip this question →
         </button>
       </div>
     );
@@ -587,21 +636,27 @@ export default function Home() {
   // --- FEEDBACK ---
   if (state === "feedback") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-400 to-purple-500 flex flex-col items-center justify-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-8">How was that?</h2>
+      <div className="min-h-screen bg-[#fdf6ee] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-16 right-12 w-24 h-24 bg-purple-200/30 rounded-full blur-2xl" />
+        <div className="absolute bottom-20 left-10 w-20 h-20 bg-amber-200/30 rounded-full blur-2xl" />
+
+        <div className="text-5xl mb-4 animate-wiggle">🤔</div>
+        <h2 className="text-3xl font-extrabold text-amber-800 mb-2">How was that?</h2>
+        <p className="text-amber-600/60 text-sm mb-8 font-medium">Help me pick the right level for you</p>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           {[
-            { rating: "too_easy", emoji: "😊", text: "Too easy!", bg: "bg-green-100", color: "text-green-800" },
-            { rating: "just_right", emoji: "👍", text: "Just right!", bg: "bg-blue-100", color: "text-blue-800" },
-            { rating: "too_hard", emoji: "😅", text: "Too hard!", bg: "bg-orange-100", color: "text-orange-800" },
-          ].map((item) => (
+            { rating: "too_easy", emoji: "😊", text: "Too easy!", bg: "bg-emerald-50", border: "border-emerald-200", color: "text-emerald-800" },
+            { rating: "just_right", emoji: "👍", text: "Just right!", bg: "bg-amber-50", border: "border-amber-200", color: "text-amber-800" },
+            { rating: "too_hard", emoji: "😅", text: "Too hard!", bg: "bg-purple-50", border: "border-purple-200", color: "text-purple-800" },
+          ].map((item, i) => (
             <button
               key={item.rating}
               onClick={() => handleFeedback(item.rating)}
-              className={`${item.bg} rounded-2xl p-5 flex items-center gap-4 shadow-lg hover:scale-105 transition-transform active:scale-95`}
+              className={`animate-pop-in ${item.bg} ${item.border} border rounded-3xl p-6 flex items-center gap-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:scale-[1.03] hover:shadow-lg transition-all active:scale-[0.98]`}
+              style={{ animationDelay: `${i * 100}ms` }}
             >
-              <span className="text-4xl">{item.emoji}</span>
-              <span className={`text-xl font-semibold ${item.color}`}>{item.text}</span>
+              <span className="text-5xl">{item.emoji}</span>
+              <span className={`text-xl font-bold ${item.color}`}>{item.text}</span>
             </button>
           ))}
         </div>
@@ -611,22 +666,32 @@ export default function Home() {
 
   // --- CHAT ---
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      <div className={`bg-gradient-to-r ${character.color} p-3 pb-2`}>
+    <div className="h-screen bg-[#fdf6ee] flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-amber-100 p-3 pb-2">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{character.emoji}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{character.emoji}</span>
             <div>
-              <h1 className="text-white font-bold text-lg">{character.name}</h1>
-              <p className="text-white/70 text-xs">Talking about: {selectedOption}</p>
+              <h1 className="text-amber-900 font-extrabold text-lg">{character.name}</h1>
+              <p className="text-amber-600/50 text-xs font-medium">Talking about: {selectedOption}</p>
             </div>
           </div>
-          <button
-            onClick={handleNewQuestion}
-            className="bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/30 transition-colors"
-          >
-            New Question ✨
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setState("characters")}
+              className="w-9 h-9 rounded-full bg-amber-100 hover:bg-amber-200 transition-colors flex items-center justify-center text-base"
+              title="Switch buddy"
+            >
+              🔄
+            </button>
+            <button
+              onClick={handleNewQuestion}
+              className="bg-amber-500 text-white px-4 py-2 rounded-2xl text-sm font-bold hover:bg-amber-600 transition-all shadow-sm shadow-amber-500/20 hover:-translate-y-0.5 active:translate-y-0"
+            >
+              New Question ✨
+            </button>
+          </div>
         </div>
         {/* Progress bar */}
         {(() => {
@@ -634,11 +699,11 @@ export default function Home() {
           const nextChar = getNextUnlock(messageCount);
           if (!nextChar) return null;
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-1">
               <span className="text-lg">{character.emoji}</span>
-              <div className="flex-1 bg-white/20 rounded-full h-2.5">
+              <div className="flex-1 bg-amber-100 rounded-full h-2.5">
                 <div
-                  className="bg-yellow-400 h-2.5 rounded-full transition-all duration-700 ease-out"
+                  className="bg-amber-400 h-2.5 rounded-full transition-all duration-700 ease-out"
                   style={{ width: `${progress.percent}%` }}
                 />
               </div>
@@ -648,31 +713,45 @@ export default function Home() {
         })()}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+            <div className={`max-w-[80%] rounded-3xl px-5 py-3 ${
               msg.role === "user"
-                ? "bg-blue-500 text-white rounded-br-sm"
-                : "bg-white text-gray-800 shadow-sm rounded-bl-sm"
+                ? "bg-amber-500 text-white rounded-br-lg shadow-sm shadow-amber-500/20"
+                : "bg-white text-amber-900 shadow-[0_2px_12px_rgba(0,0,0,0.06)] rounded-bl-lg border border-amber-50"
             }`}>
               {msg.role === "assistant" && (
-                <span className="text-xs text-gray-400 block mb-1">{character.emoji} {character.name}</span>
+                <span className="text-xs text-amber-400 block mb-1 font-semibold">{character.emoji} {character.name}</span>
               )}
-              <p className="text-base">{msg.content}</p>
+              <p className="text-base leading-relaxed">{msg.content}</p>
+              {msg.role === "assistant" && (
+                <button
+                  onClick={() => speak(msg.content)}
+                  className="mt-2 w-10 h-10 rounded-full bg-amber-100 hover:bg-amber-200 transition-colors flex items-center justify-center text-xl"
+                  title="Play again"
+                >
+                  🔄
+                </button>
+              )}
             </div>
           </div>
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white rounded-2xl px-4 py-3 shadow-sm rounded-bl-sm">
-              <span className="text-gray-400 animate-pulse">thinking...</span>
+            <div className="bg-white rounded-3xl px-5 py-3 shadow-[0_2px_12px_rgba(0,0,0,0.06)] rounded-bl-lg border border-amber-50">
+              <div className="flex gap-1.5 items-center py-1">
+                <div className="w-2.5 h-2.5 bg-amber-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2.5 h-2.5 bg-amber-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2.5 h-2.5 bg-amber-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
             </div>
           </div>
         )}
         {transcript && (
           <div className="flex justify-end">
-            <div className="bg-blue-200 text-blue-800 rounded-2xl px-4 py-3 rounded-br-sm opacity-60">
+            <div className="bg-amber-200/60 text-amber-800 rounded-3xl px-5 py-3 rounded-br-lg">
               <p className="text-base italic">{transcript}...</p>
             </div>
           </div>
@@ -680,29 +759,31 @@ export default function Home() {
         <div ref={chatEndRef} />
       </div>
 
+      {/* Quick responses */}
       <div className="px-4 pb-2 flex gap-2 overflow-x-auto justify-center">
         {quickResponses.map((qr) => (
           <button
             key={qr}
             onClick={() => sendMessage(qr)}
             disabled={isLoading}
-            className="whitespace-nowrap bg-white border border-gray-200 px-3 py-2 rounded-full text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors flex-shrink-0"
+            className="whitespace-nowrap bg-white border border-amber-200 px-4 py-2.5 rounded-full text-sm text-amber-700 font-semibold hover:bg-amber-50 hover:border-amber-300 disabled:opacity-30 transition-all flex-shrink-0 shadow-sm"
           >
             {qr}
           </button>
         ))}
       </div>
 
-      <div className="p-4 bg-white border-t flex items-center justify-center">
+      {/* Mic button */}
+      <div className="p-4 bg-white/60 backdrop-blur-sm border-t border-amber-100 flex items-center justify-center">
         <button
           onClick={isListening ? stopListening : startListening}
           disabled={isLoading}
-          className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl transition-all shadow-lg ${
+          className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl transition-all ${
             isListening
-              ? "bg-red-500 text-white animate-pulse scale-110"
+              ? "bg-red-500 text-white animate-pulse scale-110 shadow-lg shadow-red-500/30"
               : isSpeaking
-              ? "bg-blue-400 text-white animate-pulse"
-              : "bg-blue-500 text-white hover:bg-blue-600 active:scale-95"
+              ? "bg-purple-500 text-white animate-pulse shadow-lg shadow-purple-500/30"
+              : "bg-amber-500 text-white hover:bg-amber-600 active:scale-95 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
           }`}
         >
           {isListening ? "⏹" : isSpeaking ? "🔊" : "🎤"}
