@@ -347,17 +347,27 @@ export default function Home() {
   }, [isLoading, currentQuestion, selectedOption, difficulty, character.personality, speak, speakSentence]);
 
   // Speech-to-text — tap to start, tap to stop (manual control)
+  // Can be pressed anytime — stops audio playback if playing
   const startListening = useCallback(() => {
+    // Stop any playing audio immediately
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    window.speechSynthesis?.cancel();
+    setIsSpeaking(false);
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
 
     const recognition = new SR();
     recognition.lang = "en-US";
-    recognition.continuous = true; // Don't auto-stop
+    recognition.continuous = true;
     recognition.interimResults = true;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      // Combine all results into one transcript
       let fullTranscript = "";
       for (let i = 0; i < event.results.length; i++) {
         fullTranscript += event.results[i][0].transcript;
@@ -366,7 +376,6 @@ export default function Home() {
     };
     recognition.onerror = () => setIsListening(false);
     recognition.onend = () => {
-      // If still in listening mode, it was an unexpected stop — don't send
       setIsListening(false);
     };
 
@@ -777,7 +786,6 @@ export default function Home() {
       <div className="p-4 bg-white/60 backdrop-blur-sm border-t border-amber-100 flex items-center justify-center">
         <button
           onClick={isListening ? stopListening : startListening}
-          disabled={isLoading}
           className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl transition-all ${
             isListening
               ? "bg-red-500 text-white animate-pulse scale-110 shadow-lg shadow-red-500/30"
