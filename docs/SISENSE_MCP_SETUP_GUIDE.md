@@ -178,17 +178,3 @@ You don't need to keep any terminal open. Claude Desktop manages everything.
 | MCP server code | `C:\Tests\sisense-mcp-server` |
 | Get new token | Sisense → REST API → authentication → /tokens/api → Try it out → Execute |
 | Token expires | 7 days from creation |
-
-Claude API key
-OpenAI API key
-Deploy to vercel
-
- cd C:\Tests\sisense-mcp-server                                                              $env:SISENSE_URL="https://signup-x9gpyj2i.sisense.com"
-  $env:SISENSE_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiNjlkM2Q1ZWE3NGI4YzVjM  WE5M2QzMDBhIiwiYXBpU2VjcmV0IjoiZDMzZWNiZTctYzQ5OS03MWU0LWU3OTUtOTczOTIwZWM1ZmE0IiwiYWxsb3d
-  lZFRlbmFudHMiOlsiNjlkM2M0YTJkYjZkMmJkMDAzMTFhMTMzIl0sInRlbmFudElkIjoiNjlkM2M0YTJkYjZkMmJkM
-  DAzMTFhMTMzIiwiZXhwIjoxNzc2MjI1MTUzfQ.KK5s9N1AfIpoGRGj-6AC7nWuscVFWAU7bwgtpKSgY6w"
-  bun run dev
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiNjlkM2Q1ZWE3NGI4YzVjMWE5M2QzMDBhIiwiYXBpU2VjcmV0IjoiZDMzZWNiZTctYzQ5OS03MWU0LWU3OTUtOTczOTIwZWM1ZmE0IiwiYWxsb3dlZFRlbmFudHMiOlsiNjlkM2M0YTJkYjZkMmJkMDAzMTFhMTMzIl0sInRlbmFudElkIjoiNjlkM2M0YTJkYjZkMmJkMDAzMTFhMTMzIiwiZXhwIjoxNzc2MjI1MTUzfQ.KK5s9N1AfIpoGRGj-6AC7nWuscVFWAU7bwgtpKSgY6w
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiNjlkM2Q1ZWE3NGI4YzVjMWE5M2QzMDBhIiwiYXBpU2VjcmV0IjoiZDMzZWNiZTctYzQ5OS03MWU0LWU3OTUtOTczOTIwZWM1ZmE0IiwiYWxsb3dlZFRlbmFudHMiOlsiNjlkM2M0YTJkYjZkMmJkMDAzMTFhMTMzIl0sInRlbmFudElkIjoiNjlkM2M0YTJkYjZkMmJkMDAzMTFhMTMzIiwiZXhwIjoxNzc2MjIzNzkyfQ.mCgPU3BxXFHrIT55dPGMwiSsy3B9QUK-TySvGIJdih8
