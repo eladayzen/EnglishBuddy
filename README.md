@@ -32,7 +32,7 @@ scripts/
 ## Live Demo
 
 - **App:** [English Buddy on Vercel](https://app-dxu57gif6-eladizen-7580s-projects.vercel.app)
-- **Video:** [link to video]
+- **Video:** [https://www.youtube.com/watch?v=ZkX8M4ibK98]
 
 ## Tech Stack
 
