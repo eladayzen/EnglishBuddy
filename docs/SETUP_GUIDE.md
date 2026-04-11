@@ -1,7 +1,7 @@
 # Sisense + AI App: Complete Setup Guide
 ## From zero to AI-powered analytics in your app
 
-This guide walks you through connecting Sisense analytics to any app using the Sisense MCP Server and Claude Desktop. It's based on a real project — English Buddy, an AI English tutor for kids — but the steps apply to any product with a PostgreSQL database.
+This guide walks you through connecting Sisense analytics to any app using the Sisense MCP Server and Claude Desktop.
 
 ---
 
@@ -113,8 +113,6 @@ This gives Sisense access to your app's actual data.
 
 6. Select the tables you want to analyze
 7. Click **Done** → **Publish**
-
-> We used [Neon](https://neon.tech) for our PostgreSQL — it's free, takes 2 minutes to set up, and works seamlessly with Sisense's Live Connect.
 
 ---
 
