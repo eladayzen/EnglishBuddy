@@ -68,13 +68,6 @@ DATABASE_URL="your-postgres-connection-string" node scripts/seed-synthetic-data.
 
 See [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md) for the complete walkthrough.
 
-## Assignment Deliverables
-
-| Part | Weight | Deliverable |
-|------|--------|-------------|
-| Strategy | 30% | [docs/STRATEGY.md](docs/STRATEGY.md) |
-| Build | 40% | This repo + live app + Sisense integration |
-| Story | 30% | Video walkthrough |
 
 ---
 
