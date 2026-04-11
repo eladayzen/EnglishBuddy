@@ -131,7 +131,7 @@ export default function Home() {
   const audioQueueRef = useRef<{ url: string; index: number }[]>([]);
   const nextPlayIndexRef = useRef(1);
   const isPlayingRef = useRef(false);
-  const PAUSE_BETWEEN_SENTENCES_MS = 600;
+  const PAUSE_BETWEEN_SENTENCES_MS = 400;
 
   // Pre-cached common openers
   const cachedAudioRef = useRef<Record<string, string>>({});

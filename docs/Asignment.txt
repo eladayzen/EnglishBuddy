@@ -1,0 +1,58 @@
+How to Submit:
+Please compile your work (strategy brief, prototype links/repo, and content asset) into a single shareable format. A public GitHub repository with a clear README, a Notion page, or a concise PDF are all great options.
+
+Kindly upload your completed challenge in the link below.
+
+If you have any questions while working on the assignment: technical, clarification-related, or otherwise, please feel free to reach out to Gital. We want you to enjoy the process and put your best foot forward.
+
+Looking forward to seeing what you build! 🚀
+
+Best regards,
+Isaac Greengruz
+
+
+Please submit here:
+https://app.greenhouse.io/tests/3567345dc2d2a5637fc2eeab3eea1a1a?utm_medium=email&utm_source=TakeHomeTest
+
+
+Sisense Builder Evangelist: The Build & Tell Challenge �� 
+The Builder Evangelist role at Sisense focuses on hands-on creation - building prototypes and real-world use cases that show developers what is possible with our platform. We are looking for a unique combination of technical ability (getting your hands dirty with code), compelling technical storytelling, and a strong understanding of how to turn a community into a growth engine. 
+The goal of this take-home assignment is to give you a flexible canvas to showcase your unique strengths. We’ve kept the guidelines intentionally open-ended because, in this role, you will often need to navigate ambiguity, define the best path forward, and create your own playbooks. We want to see your creative process, how you choose to leverage our platform, and how you communicate your ideas to the world. 
+The assignment consists of 3 short parts: 
+Part 1: The Strategy 
+Before you build anything, take a few minutes to map out your approach. Think of this as your internal brief - the strategic foundation that will guide what you build and how you tell the story. Keep it brief: 
+1. Who is the audience? What specific developer persona, pain point, or workflow challenge does your prototype aim to address? 
+2. Where do we show this? Which developer communities, forums, conferences, or emerging ecosystems would you target to generate maximum exposure and impact for Sisense? 
+3. What is the Call to Action? How does your prototype or content contribute to Product-Led Growth (PLG)? How do you take a developer who is watching from the sidelines and turn them into someone who is actively building with Sisense?
+Part 2: The Build (Technical Ability & Innovation) 
+The goal here is to see how you combine the Sisense platform with hot technology trends and modern building platforms. 
+● The Task: Create a working prototype, integration, or use case. Our Emphasis: Try to combine Sisense with the world of "Vibe Coding" - whether that means using AI tools to write all your code rapidly, or creating an experience where the end-user uses AI to "talk" to the data. 
+● Your Environment: Sign up for the Sisense Trial environment (free for 7 days). The goal is for you to experience our self-service system from scratch, just like any other developer would. 
+● Expected Deliverables (Choose what suits you): 
+○ Open Source (GitHub Repository). 
+○ Link to a live environment (if relevant). 
+○ A technical screencast showing the code and explaining how the solution works behind the scenes. 
+Part 3: The Story (Storytelling & Evangelism) You built something cool. Now, how do you get other builders to want to try it themselves? 
+● The Task: Create one "content asset" designed to explain to developers what you built, why it's interesting, and how it works. 
+● Expected Deliverables (Choose one format): 
+Note: If you created a screencast in Part 2, you're welcome to expand it into your content asset here - no need to start from scratch. 
+○ A short video (up to 3 minutes, e.g., using 
+) running through and explaining the solution. 
+○ A short technical post (Dev.to, Medium, or engineering blog style). 
+○ A detailed, attention-grabbing Thread on X (Twitter) or LinkedIn. 
+○ Other - up to you 
+● What are we looking for? Clear communication that explains technical concepts well, at eye level, and without empty marketing buzzwords. Speak to builders in their own language. 
+�� Guidelines & Tips for Success (Read Before Starting)
+We know that learning an enterprise data platform from scratch takes time. So you can focus on innovation rather than configuration, here are our core guidelines: 
+● How We Evaluate: This isn't just a coding test. We're looking for a Builder Evangelist - someone who thinks strategically about audience and messaging before writing a single line of code. A simple but well-targeted prototype, paired with a compelling story and sharp positioning, will always score higher than an over-engineered build with no narrative. We weigh all three parts, but the thread that connects them matters most (Strategy 30% / Build 40% / Story 30%). 
+● Time & Flexibility: We absolutely do not expect you to dedicate a full week to this project. We estimate this will take roughly a day's worth of focused work, spread across the week however works best for you. 
+● Leverage AI Tools: You are fully encouraged to use any AI tools at your disposal - from brainstorming ideas to writing code and generating content. Our goal is to evaluate your strategic thinking, your approach, and the final output, so use whatever functions help save you time and effort. 
+● Don't Over-Engineer: Please don't try to build a perfect, production-ready app. A brilliant 50-line Python script that does something innovative, paired with a great explainer video, is worth much more to us than a massive, complex project that you didn't finish. 
+● Use Sample Data: Don't waste precious time building complex data schemas. You can use the sample data/Studio Assistant to generate a synthetic data model for any business domain. 
+● Stuck on Setup? If you run into any issues with the Trial sign-up or environment configuration, don't waste time troubleshooting - just reach out to us. We're happy to provide a pre-configured environment so you can focus on building. 
+● Need inspiration? Here are a few directions: Use Cursor or any vibe coding tool to build a simple web app with Sisense analytics embedded via the Compose SDK; build an AI-powered assistant inside a Next.js app that lets users ask questions about their embedded dashboards in natural language. 
+● Helpful links: 
+○ the Compose SDK playground 
+○ Sisense MCP Server on GitHub 
+How to Submit: Please compile all relevant links and materials into a single shareable format - a GitHub repo with a solid README, a Notion page, a PDF, or whatever format you think best represents your work. 
+We are here for any technical questions or advice along the way. Good luck & Happy Building! ️
