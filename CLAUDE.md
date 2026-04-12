@@ -78,7 +78,7 @@ Analytics → Sisense reads PostgreSQL → MCP Server → Claude Desktop
 | Leo 🧑‍🚀 | onyx | 150 |
 
 ## Rules
-- AI responses: max **10 words** (tightened from 15 — old limit was ignored). Enforced in both `app/api/chat/route.ts` and `app/api/chat-stream/route.ts` system prompts.
+- AI responses: max **15 words**. Enforced in both `app/api/chat/route.ts` and `app/api/chat-stream/route.ts` system prompts.
 - Mic: tap to start, tap to stop (manual control, `continuous=true`, never auto-cuts)
 - Pressing mic while AI speaks stops audio immediately
 - Pre-cached common opener phrases for instant first-word playback
@@ -94,4 +94,4 @@ DONE and submitted (April 2026). Greenhouse video + repo delivered. 200 syntheti
 - Test locally on 3004 first, then deploy.
 
 ## Last Deployed State
-AI word limit tightened to 10 words (see `api/chat/route.ts` and `api/chat-stream/route.ts`), deployed to Vercel, confirmed working.
+AI word limit set to 15 words (see `api/chat/route.ts` and `api/chat-stream/route.ts`). Stop-hint bubble added to mic button in `app/page.tsx`.

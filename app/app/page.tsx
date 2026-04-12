@@ -37,10 +37,12 @@ export default function Home() {
   const [character, setCharacter] = useState<Character>(CHARACTERS[0]);
   const [messageCount, setMessageCount] = useState(0);
   const [justUnlocked, setJustUnlocked] = useState<Character | null>(null);
+  const [showStopHint, setShowStopHint] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
+  const stopHintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -51,6 +53,17 @@ export default function Home() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Clear stop-hint whenever we exit listening (covers onerror/onend paths too)
+  useEffect(() => {
+    if (!isListening) {
+      if (stopHintTimeoutRef.current) {
+        clearTimeout(stopHintTimeoutRef.current);
+        stopHintTimeoutRef.current = null;
+      }
+      setShowStopHint(false);
+    }
+  }, [isListening]);
 
   // Load saved state — auto-skip welcome for returning users
   useEffect(() => {
@@ -373,6 +386,9 @@ export default function Home() {
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
+
+    if (stopHintTimeoutRef.current) clearTimeout(stopHintTimeoutRef.current);
+    stopHintTimeoutRef.current = setTimeout(() => setShowStopHint(true), 1500);
   }, []);
 
   const stopListening = useCallback(() => {
@@ -381,6 +397,11 @@ export default function Home() {
       recognitionRef.current.stop();
     }
     setIsListening(false);
+    if (stopHintTimeoutRef.current) {
+      clearTimeout(stopHintTimeoutRef.current);
+      stopHintTimeoutRef.current = null;
+    }
+    setShowStopHint(false);
     // Send whatever was transcribed
     if (transcript.trim()) {
       sendMessage(transcript.trim());
@@ -775,19 +796,30 @@ export default function Home() {
 
       {/* Mic button */}
       <div className="p-4 bg-white/60 backdrop-blur-sm border-t border-amber-100 flex items-center justify-center">
-        <button
-          onClick={isListening ? stopListening : startListening}
-          disabled={isLoading}
-          className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl transition-all ${
-            isListening
-              ? "bg-red-500 text-white animate-pulse scale-110 shadow-lg shadow-red-500/30"
-              : isSpeaking
-              ? "bg-purple-500 text-white animate-pulse shadow-lg shadow-purple-500/30"
-              : "bg-amber-500 text-white hover:bg-amber-600 active:scale-95 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
-          }`}
-        >
-          {isListening ? "⏹" : isSpeaking ? "🔊" : "🎤"}
-        </button>
+        <div className="relative flex items-center justify-center">
+          {showStopHint && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-14 left-1/2 -translate-x-1/2 whitespace-nowrap bg-amber-500 text-white text-sm font-semibold px-3 py-1.5 rounded-full shadow-lg animate-bounce"
+            >
+              Tap again to stop 👇
+              <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 bg-amber-500 rotate-45" />
+            </div>
+          )}
+          <button
+            onClick={isListening ? stopListening : startListening}
+            disabled={isLoading}
+            className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl transition-all ${
+              isListening
+                ? "bg-red-500 text-white animate-pulse scale-110 shadow-lg shadow-red-500/30"
+                : isSpeaking
+                ? "bg-purple-500 text-white animate-pulse shadow-lg shadow-purple-500/30"
+                : "bg-amber-500 text-white hover:bg-amber-600 active:scale-95 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+            }`}
+          >
+            {isListening ? "⏹" : isSpeaking ? "🔊" : "🎤"}
+          </button>
+        </div>
       </div>
     </div>
   );
