@@ -1,18 +1,12 @@
 # English Buddy 🎓
 
-**AI-powered English conversation app for kids** — built as a Sisense Builder Evangelist assignment demo.
+**AI-powered English conversation app for kids** 
 
 ## What Is This?
 
 English Buddy is a voice-first English tutor for kids (ages 8-12) learning English as a second language. Kids pick a topic, chat with an AI character, and improve their English through natural conversation.
 
 **But this repo isn't just about the app.** It's a demonstration of how a solo builder can go from zero to investor-ready analytics using **Sisense + AI tools**.
-
-## The Story
-
-I vibe-coded this app in 3 days using Claude Code. Then I connected Sisense's MCP Server to Claude Desktop, pointed it at my production database, and within minutes I was asking natural language questions about my users — and getting visual charts with AI insights back.
-
-No dashboard building. No SQL. Just conversation.
 
 ## What's Inside
 
@@ -32,7 +26,7 @@ scripts/
 ## Live Demo
 
 - **App:** [English Buddy on Vercel](https://app-dxu57gif6-eladizen-7580s-projects.vercel.app)
-- **Video:** [https://www.youtube.com/watch?v=ZkX8M4ibK98]
+- **Video:** [https://youtu.be/yHjVUE0D5zs]
 
 ## Tech Stack
 
